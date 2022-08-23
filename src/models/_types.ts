@@ -50,6 +50,12 @@ export interface MyUser {
 
   save: () => Promise<Object>
 
+  changeUniqueName: (name: string) => Promise<MyUser>
+
+  changeEmail: (email: string) => Promise<MyUser>
+
+  changeLastOnline: (online?: string) => Promise<MyUser>
+
 }
 
 export interface MyConversation {
@@ -74,17 +80,37 @@ export interface MyConversation {
 
   groupImage: {
 
-    normal: Buffer
+    normal: Buffer | undefined
 
-    small: Buffer
+    small: Buffer | undefined
 
   }
 
   groupName: string
 
+  groupDescription: string
+
+  roomKey: string
+
   toJSON: () => Object
 
   save: () => Promise<Object>
+
+  addGroupMember: (user: MyUser) => Promise<Object>
+
+  removeGroupMember: (user: MyUser) => Promise<Object>
+
+  setGroupName: (newName: string) => Promise<Object>
+
+  setGroupImage: (small: Buffer, normal: Buffer) => Promise<Object>
+
+  sendTextMessage: (message: MyMessage) => Promise<Object>
+
+  sendImageMessage: (message: MyMessage) => Promise<Object>
+
+  updateTextMessage: (messageID: string, newText: string) => Promise<Object>
+
+  deleteMessage: (messageID: string) => Promise<Object>
 
 }
 
@@ -105,9 +131,9 @@ export interface MyMessage {
 
     available: boolean
 
-    normal: Buffer
+    normal: Buffer | undefined
 
-    small: Buffer
+    small: Buffer | undefined
 
   }
 

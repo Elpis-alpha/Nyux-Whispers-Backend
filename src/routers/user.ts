@@ -33,9 +33,25 @@ const upload = multer({
 // Sends post request to create new user
 router.post('/api/users/create', async (req, res) => {
 
-  const user: MyUser = new User(req.body)
-
   try {
+  
+    const user: MyUser = new User({
+
+      ...req.body,
+
+      lastOnline: JSON.stringify(new Date()),
+
+      theme: "Auto",
+
+      fontSize: "Normal",
+
+      biography: "Just another user of Nyux Whispers",
+
+      phoneNumber: "",
+
+      sendWithEnter: false,
+
+    })
 
     await user.save()
 
@@ -177,30 +193,198 @@ router.get('/api/users/find', async (req, res) => {
 })
 
 
-// Sends patch request to update users
-router.patch('/api/users/update', auth, async (req, res) => {
+// sends post request to change user name
+router.post('/api/users/change-name', auth, async (req, res) => {
 
-  const updates = Object.keys(req.body)
-
-  const allowedUpdate = ['name']
-
-  const isValidOp = updates.every(item => allowedUpdate.includes(item))
-
-  if (!isValidOp) return res.status(400).send({ error: 'Invalid Updates', allowedUpdates: allowedUpdate })
+  // @ts-ignore
+  const user: MyUser = req.user
 
   try {
 
-    // @ts-ignore
-    const user: MyUser = req.user
+    if (!req.body.name) return errorJson(res, 400)
 
-    // @ts-ignore
-    updates.forEach(item => user[item] = req.body[item])
+    user.name = req.body.name
 
     await user.save()
 
-    // const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
+    return res.send(user)
 
-    res.status(201).send(user)
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user uniqueName
+router.post('/api/users/change-unique-name', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.name) return errorJson(res, 400)
+
+    const userr = await user.changeUniqueName(req.body.name)
+
+    // @ts-ignore
+    if (userr.error) return errorJson(res, 403)
+
+    return res.send(userr)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user email
+router.post('/api/users/change-email', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.email) return errorJson(res, 400)
+
+    const userr = await user.changeEmail(req.body.email)
+
+    // @ts-ignore
+    if (userr.error) return errorJson(res, 403)
+
+    return res.send(userr)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user theme
+router.post('/api/users/change-theme', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.theme) return errorJson(res, 400)
+
+    user.theme = req.body.theme
+
+    await user.save()
+
+    return res.send(user)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user font size
+router.post('/api/users/change-font-size', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.fontSize) return errorJson(res, 400)
+
+    user.fontSize = req.body.fontSize
+
+    await user.save()
+
+    return res.send(user)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user biography
+router.post('/api/users/change-biography', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.biography) return errorJson(res, 400)
+
+    user.biography = req.body.biography
+
+    await user.save()
+
+    return res.send(user)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user phone number
+router.post('/api/users/change-phone-number', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.phoneNumber) return errorJson(res, 400)
+
+    user.phoneNumber = req.body.phoneNumber
+
+    await user.save()
+
+    return res.send(user)
+
+  } catch (error) {
+
+    return errorJson(res, 500)
+
+  }
+
+})
+
+
+// sends post request to change user send with enter
+router.post('/api/users/change-send-with-enter', auth, async (req, res) => {
+
+  // @ts-ignore
+  const user: MyUser = req.user
+
+  try {
+
+    if (!req.body.sendWithEnter) return errorJson(res, 400)
+
+    user.sendWithEnter = req.body.sendWithEnter
+
+    await user.save()
+
+    return res.send(user)
 
   } catch (error) {
 
@@ -277,18 +461,15 @@ router.post('/api/users/avatar/upload', auth, upload.single('avatar'), async (re
 
     const buffer = await sharp(req.file.buffer).resize({ width: 900 }).png({ quality: 20 }).toBuffer()
 
-    user.avatar = buffer
+    user.avatar.normal = buffer
 
-    user.avatarSmall = bufferSmall
+    user.avatar.small = bufferSmall
 
     await user.save()
 
     res.send({ message: 'Image Saved' })
 
   } catch (error) {
-
-    console.log(error);
-    
 
     return errorJson(res, 400)
 
@@ -306,9 +487,9 @@ router.delete('/api/users/avatar/remove', auth, async (req, res) => {
     // @ts-ignore
     const user: MyUser = req.user
 
-    user.avatar = undefined
+    user.avatar.normal = undefined
 
-    user.avatarSmall = undefined
+    user.avatar.small = undefined
 
     await user.save()
 
@@ -330,15 +511,16 @@ router.get('/api/users/avatar/view', async (req, res) => {
 
   try {
 
-    const user = await User.findById(_id)
+    // @ts-ignore
+    const user: MyUser = await User.findById(_id)
 
     if (!user || !user.avatar) throw new Error("No User or Avatar")
 
     res.set('Content-Type', 'image/png')
 
-    if (req.query.size === "small") { res.send(user.avatarSmall) }
+    if (req.query.size === "small") { res.send(user.avatar.small) }
 
-    else { res.send(user.avatar) } // large
+    else { res.send(user.avatar.normal) } // large
 
   } catch (error) {
 
@@ -350,13 +532,27 @@ router.get('/api/users/avatar/view', async (req, res) => {
 
 
 // sends get request to check user existence
-router.get('/api/users/user/exists', async (req, res) => {
+router.get('/api/users/exists', async (req, res) => {
+
+  const email = req.query.email
+
+  const uniqueName = req.query.uniqueName
 
   try {
 
-    const user = await User.findOne({ email: req.query.email })
+    if (typeof email === "string") {
 
-    if (user === null) { return res.status(200).send({ message: 'user does not exist' }) }
+      const user = await User.findOne({ email })
+
+      if (user === null) { return res.status(200).send({ message: 'user does not exist' }) }
+
+    } else if (typeof uniqueName === "string") {
+
+      const user = await User.findOne({ uniqueName })
+
+      if (user === null) { return res.status(200).send({ message: 'user does not exist' }) }
+
+    }
 
     res.send({ message: 'user exists' })
 

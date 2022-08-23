@@ -1,8 +1,11 @@
 import mongoose from 'mongoose'
 
+import { v4 } from 'uuid'
+
 import Message from './Message'
 
 import { MyConversation, MyMessage, MyUser } from './_types'
+
 
 const conversationSchema = new mongoose.Schema({
 
@@ -62,7 +65,7 @@ const conversationSchema = new mongoose.Schema({
 
     normal: {
 
-      type: Buffer
+      type: Buffer,
 
     },
 
@@ -86,13 +89,47 @@ const conversationSchema = new mongoose.Schema({
 
     type: String,
 
+    trim: true,
+
+  },
+
+  groupDescription: {
+
+    type: String,
+
+    trim: true,
+
+  }, 
+
+  roomKey: {
+    
+    type: String,
+
     required: true,
 
     trim: true,
 
+    default: v4()
+
   }
 
 }, { timestamps: true })
+
+
+
+
+// Private profile
+conversationSchema.methods.toJSON = function () {
+
+  const conversation = this
+
+  const returnConversation = conversation.toObject()
+
+  delete returnConversation.roomKey
+
+  return returnConversation
+
+}
 
 
 

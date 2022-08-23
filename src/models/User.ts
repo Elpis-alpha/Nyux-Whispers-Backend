@@ -11,6 +11,7 @@ import { v4 } from 'uuid'
 import sendMail from '../mail/sendMail'
 
 import { welcomeMail, exitMail } from '../mail/mailTypes'
+import { MyUser } from './_types'
 
 
 const siteName: any = process.env.SITE_NAME
@@ -197,6 +198,85 @@ const userSchema = new mongoose.Schema({
   }
 
 }, { timestamps: true });
+
+
+
+
+// Change User UniqueName
+userSchema.methods.changeUniqueName = async function (name: string) {
+
+  // @ts-ignore
+  const user: MyUser = this
+
+  try {
+
+    user.uniqueName = name
+
+    await user.save()
+
+    return user
+
+  } catch (error) {
+
+    return { error: 'Duplicate Name' }
+
+  }
+
+}
+
+
+// Change User Email
+userSchema.methods.changeEmail = async function (email: string) {
+
+  // @ts-ignore
+  const user: MyUser = this
+
+  try {
+
+    user.email = email
+
+    await user.save()
+
+    return user
+
+  } catch (error) {
+
+    return { error: 'Duplicate Email' }
+
+  }
+
+}
+
+
+// Change User Last Online
+userSchema.methods.changeLastOnline = async function (online?: string) {
+
+  // @ts-ignore
+  const user: MyUser = this
+
+  try {
+
+    if (online) {
+
+      user.lastOnline = online
+
+    } else {
+
+      user.lastOnline = JSON.stringify(new Date())
+
+    }
+
+    await user.save()
+
+    return user
+
+  } catch (error) {
+
+    return { error: 'Server Error' }
+
+  }
+
+}
 
 
 // Generate Authentication Token
