@@ -5,13 +5,19 @@ import './db/mongoose';
 
 import hbs from 'hbs';
 
+import http from 'http';
+
 import path from 'path';
 
 import express, { Express } from 'express';
 
+import { Server } from 'socket.io';
+
 import chalk from 'chalk';
 
 import cors from 'cors';
+
+import initSocket from './socket/init';
 
 import delay from './middleware/delay';
 
@@ -26,6 +32,14 @@ import conversationRouter from './routers/conversation';
 
 // Acquire an instance of Express
 const app: Express = express();
+
+
+// Create an instance of a http server 
+const server: http.Server = http.createServer(app)
+
+
+// Create the io server instance
+const io = new Server(server)
 
 
 // Acquires the port on which the application runs
@@ -78,6 +92,10 @@ app.use(cors())
 
 // One second delay for local development
 if (!isProduction) { app.use(delay) }
+
+
+// Start Socket Configuration
+initSocket(io)
 
 
 // Automatically allows user routers

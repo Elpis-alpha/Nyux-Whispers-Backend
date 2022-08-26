@@ -29,8 +29,8 @@ const upload = (0, multer_1.default)({
 });
 // Sends post request to create new user
 router.post('/api/users/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = new User_1.default(req.body);
     try {
+        const user = new User_1.default(Object.assign(Object.assign({}, req.body), { lastOnline: JSON.stringify(new Date()), theme: "Auto", fontSize: "Normal", biography: "Just another user of Nyux Whispers", phoneNumber: "", sendWithEnter: false }));
         yield user.save();
         const token = yield user.generateAuthToken();
         const verifyUser = yield user.sendVerificationEmail();
@@ -112,21 +112,125 @@ router.get('/api/users/find', (req, res) => __awaiter(void 0, void 0, void 0, fu
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// Sends patch request to update users
-router.patch('/api/users/update', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const updates = Object.keys(req.body);
-    const allowedUpdate = ['name'];
-    const isValidOp = updates.every(item => allowedUpdate.includes(item));
-    if (!isValidOp)
-        return res.status(400).send({ error: 'Invalid Updates', allowedUpdates: allowedUpdate });
+// sends post request to change user name
+router.post('/api/users/change-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
     try {
-        // @ts-ignore
-        const user = req.user;
-        // @ts-ignore
-        updates.forEach(item => user[item] = req.body[item]);
+        if (!req.body.name)
+            return (0, errors_1.errorJson)(res, 400);
+        user.name = req.body.name;
         yield user.save();
-        // const user = await User.findByIdAndUpdate(_id, req.body, { new: true, runValidators: true })
-        res.status(201).send(user);
+        return res.send(user);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user uniqueName
+router.post('/api/users/change-unique-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.name)
+            return (0, errors_1.errorJson)(res, 400);
+        const userr = yield user.changeUniqueName(req.body.name);
+        // @ts-ignore
+        if (userr.error)
+            return (0, errors_1.errorJson)(res, 403);
+        return res.send(userr);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user email
+router.post('/api/users/change-email', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.email)
+            return (0, errors_1.errorJson)(res, 400);
+        const userr = yield user.changeEmail(req.body.email);
+        // @ts-ignore
+        if (userr.error)
+            return (0, errors_1.errorJson)(res, 403);
+        return res.send(userr);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user theme
+router.post('/api/users/change-theme', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.theme)
+            return (0, errors_1.errorJson)(res, 400);
+        user.theme = req.body.theme;
+        yield user.save();
+        return res.send(user);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user font size
+router.post('/api/users/change-font-size', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.fontSize)
+            return (0, errors_1.errorJson)(res, 400);
+        user.fontSize = req.body.fontSize;
+        yield user.save();
+        return res.send(user);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user biography
+router.post('/api/users/change-biography', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.biography)
+            return (0, errors_1.errorJson)(res, 400);
+        user.biography = req.body.biography;
+        yield user.save();
+        return res.send(user);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user phone number
+router.post('/api/users/change-phone-number', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.phoneNumber)
+            return (0, errors_1.errorJson)(res, 400);
+        user.phoneNumber = req.body.phoneNumber;
+        yield user.save();
+        return res.send(user);
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 500);
+    }
+}));
+// sends post request to change user send with enter
+router.post('/api/users/change-send-with-enter', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const user = req.user;
+    try {
+        if (!req.body.sendWithEnter)
+            return (0, errors_1.errorJson)(res, 400);
+        user.sendWithEnter = req.body.sendWithEnter;
+        yield user.save();
+        return res.send(user);
     }
     catch (error) {
         return (0, errors_1.errorJson)(res, 500);
@@ -171,13 +275,12 @@ router.post('/api/users/avatar/upload', auth_1.default, upload.single('avatar'),
             throw new Error('No File');
         const bufferSmall = yield (0, sharp_1.default)(req.file.buffer).resize({ width: 100 }).png({ quality: 20 }).toBuffer();
         const buffer = yield (0, sharp_1.default)(req.file.buffer).resize({ width: 900 }).png({ quality: 20 }).toBuffer();
-        user.avatar = buffer;
-        user.avatarSmall = bufferSmall;
+        user.avatar.normal = buffer;
+        user.avatar.small = bufferSmall;
         yield user.save();
         res.send({ message: 'Image Saved' });
     }
     catch (error) {
-        console.log(error);
         return (0, errors_1.errorJson)(res, 400);
     }
     // @ts-ignore
@@ -187,8 +290,8 @@ router.delete('/api/users/avatar/remove', auth_1.default, (req, res) => __awaite
     try {
         // @ts-ignore
         const user = req.user;
-        user.avatar = undefined;
-        user.avatarSmall = undefined;
+        user.avatar.normal = undefined;
+        user.avatar.small = undefined;
         yield user.save();
         res.send({ message: 'avatar removed' });
     }
@@ -200,15 +303,16 @@ router.delete('/api/users/avatar/remove', auth_1.default, (req, res) => __awaite
 router.get('/api/users/avatar/view', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const _id = req.query._id;
     try {
+        // @ts-ignore
         const user = yield User_1.default.findById(_id);
         if (!user || !user.avatar)
             throw new Error("No User or Avatar");
         res.set('Content-Type', 'image/png');
         if (req.query.size === "small") {
-            res.send(user.avatarSmall);
+            res.send(user.avatar.small);
         }
         else {
-            res.send(user.avatar);
+            res.send(user.avatar.normal);
         } // large
     }
     catch (error) {
@@ -216,11 +320,21 @@ router.get('/api/users/avatar/view', (req, res) => __awaiter(void 0, void 0, voi
     }
 }));
 // sends get request to check user existence
-router.get('/api/users/user/exists', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/api/users/exists', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const email = req.query.email;
+    const uniqueName = req.query.uniqueName;
     try {
-        const user = yield User_1.default.findOne({ email: req.query.email });
-        if (user === null) {
-            return res.status(200).send({ message: 'user does not exist' });
+        if (typeof email === "string") {
+            const user = yield User_1.default.findOne({ email });
+            if (user === null) {
+                return res.status(200).send({ message: 'user does not exist' });
+            }
+        }
+        else if (typeof uniqueName === "string") {
+            const user = yield User_1.default.findOne({ uniqueName });
+            if (user === null) {
+                return res.status(200).send({ message: 'user does not exist' });
+            }
         }
         res.send({ message: 'user exists' });
     }

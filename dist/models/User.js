@@ -23,11 +23,18 @@ const siteName = process.env.SITE_NAME;
 const host = process.env.HOST;
 const jwtSecret = process.env.JWT_SECRET;
 // Sets up user schema
-const userSchemer = new mongoose_1.default.Schema({
+const userSchema = new mongoose_1.default.Schema({
     name: {
         type: String,
         required: true,
         trim: true,
+    },
+    uniqueName: {
+        type: String,
+        required: true,
+        trim: true,
+        lowercase: true,
+        unique: true,
     },
     email: {
         type: String,
@@ -41,11 +48,52 @@ const userSchemer = new mongoose_1.default.Schema({
             }
         }
     },
+    lastOnline: {
+        type: String,
+        required: true,
+        trim: true,
+        // When websocket begins, lastOnline = "online"
+        // When websocket ends, lastOnline = "date string"
+    },
+    theme: {
+        type: String,
+        required: true,
+        trim: true,
+        enum: {
+            values: ["Light", "Dark", "Auto"],
+            message: `{VALUE} is not supported`
+        },
+    },
+    fontSize: {
+        type: String,
+        required: true,
+        trim: true,
+        enum: {
+            // 0.8rem 1rem 1.2rem
+            values: ["Small", "Normal", "Large"],
+            message: `{VALUE} is not supported`
+        },
+    },
+    biography: {
+        type: String,
+    },
+    phoneNumber: {
+        type: String,
+    },
+    sendWithEnter: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    verify: {
+        type: String,
+        trim: true,
+        default: (0, uuid_1.v4)()
+    },
     password: {
         type: String,
         trim: true,
         required: true,
-        minlength: 5,
     },
     tokens: [
         {
@@ -56,25 +104,66 @@ const userSchemer = new mongoose_1.default.Schema({
         }
     ],
     avatar: {
-        type: Buffer
-    },
-    avatarSmall: {
-        type: Buffer
-    },
-    verify: {
-        type: String,
-        trim: true,
-        default: (0, uuid_1.v4)()
-    },
+        normal: {
+            type: Buffer
+        },
+        small: {
+            type: Buffer
+        },
+    }
 }, { timestamps: true });
-// Create Virtual relationship with Item
-userSchemer.virtual('tasks', {
-    ref: 'Task',
-    localField: '_id',
-    foreignField: 'owner'
-});
+// Change User UniqueName
+userSchema.methods.changeUniqueName = function (name) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // @ts-ignore
+        const user = this;
+        try {
+            user.uniqueName = name;
+            yield user.save();
+            return user;
+        }
+        catch (error) {
+            return { error: 'Duplicate Name' };
+        }
+    });
+};
+// Change User Email
+userSchema.methods.changeEmail = function (email) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // @ts-ignore
+        const user = this;
+        try {
+            user.email = email;
+            yield user.save();
+            return user;
+        }
+        catch (error) {
+            return { error: 'Duplicate Email' };
+        }
+    });
+};
+// Change User Last Online
+userSchema.methods.changeLastOnline = function (online) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // @ts-ignore
+        const user = this;
+        try {
+            if (online) {
+                user.lastOnline = online;
+            }
+            else {
+                user.lastOnline = JSON.stringify(new Date());
+            }
+            yield user.save();
+            return user;
+        }
+        catch (error) {
+            return { error: 'Server Error' };
+        }
+    });
+};
 // Generate Authentication Token
-userSchemer.methods.generateAuthToken = function () {
+userSchema.methods.generateAuthToken = function () {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
         const token = jsonwebtoken_1.default.sign({ _id: user.id.toString() }, jwtSecret, {});
@@ -84,29 +173,30 @@ userSchemer.methods.generateAuthToken = function () {
     });
 };
 // Private profile
-userSchemer.methods.toJSON = function () {
+userSchema.methods.toJSON = function () {
     const user = this;
     const returnUser = user.toObject();
     returnUser.verify = returnUser.verify === "true";
     delete returnUser.password;
     delete returnUser.tokens;
     delete returnUser.avatar;
-    delete returnUser.avatarSmall;
     return returnUser;
 };
 // Public profile
-userSchemer.methods.toPublicJSON = function () {
+userSchema.methods.toPublicJSON = function () {
     const user = this;
     const returnUser = user.toObject();
     returnUser.verify = returnUser.verify === "true";
     delete returnUser.password;
     delete returnUser.tokens;
     delete returnUser.avatar;
-    delete returnUser.avatarSmall;
+    delete returnUser.theme;
+    delete returnUser.fontSize;
+    delete returnUser.sendWithEnter;
     return returnUser;
 };
 // send verification mail
-userSchemer.methods.sendVerificationEmail = function () {
+userSchema.methods.sendVerificationEmail = function () {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
         const mailBody = (0, mailTypes_1.welcomeMail)(siteName, `${host}/mail/welcome-mail/${user._id}/${user.verify}`);
@@ -123,7 +213,7 @@ userSchemer.methods.sendVerificationEmail = function () {
     });
 };
 // send verification mail
-userSchemer.methods.sendExitEmail = function () {
+userSchema.methods.sendExitEmail = function () {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
         const mailBody = (0, mailTypes_1.exitMail)(siteName, `${host}/complain`);
@@ -140,7 +230,7 @@ userSchemer.methods.sendExitEmail = function () {
     });
 };
 // For login
-userSchemer.statics.findbyCredentials = (email, password) => __awaiter(void 0, void 0, void 0, function* () {
+userSchema.statics.findbyCredentials = (email, password) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield User.findOne({ email }, { avatar: 0, avatarSmall: 0 });
     if (!user)
         throw new Error('Unable to login');
@@ -150,7 +240,7 @@ userSchemer.statics.findbyCredentials = (email, password) => __awaiter(void 0, v
     return user;
 });
 // Hash password
-userSchemer.pre('save', function (next) {
+userSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
         if (user.isModified('password'))
@@ -159,5 +249,5 @@ userSchemer.pre('save', function (next) {
     });
 });
 // Create User Model
-const User = mongoose_1.default.model('User', userSchemer);
+const User = mongoose_1.default.model('User', userSchema);
 exports.default = User;

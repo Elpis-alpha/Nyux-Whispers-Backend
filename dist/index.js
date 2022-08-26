@@ -7,17 +7,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("./middleware/init");
 require("./db/mongoose");
 const hbs_1 = __importDefault(require("hbs"));
+const http_1 = __importDefault(require("http"));
 const path_1 = __importDefault(require("path"));
 const express_1 = __importDefault(require("express"));
+const socket_io_1 = require("socket.io");
 const chalk_1 = __importDefault(require("chalk"));
 const cors_1 = __importDefault(require("cors"));
+const init_1 = __importDefault(require("./socket/init"));
 const delay_1 = __importDefault(require("./middleware/delay"));
 const user_1 = __importDefault(require("./routers/user"));
 const _404_1 = __importDefault(require("./routers/404"));
 const normal_1 = __importDefault(require("./routers/normal"));
-const task_1 = __importDefault(require("./routers/task"));
+const conversation_1 = __importDefault(require("./routers/conversation"));
 // Acquire an instance of Express
 const app = (0, express_1.default)();
+// Create an instance of a http server 
+const server = http_1.default.createServer(app);
+// Create the io server instance
+const io = new socket_io_1.Server(server);
 // Acquires the port on which the application runs
 const port = process.env.PORT;
 // Reterieves the application production status
@@ -46,12 +53,14 @@ app.use((0, cors_1.default)());
 if (!isProduction) {
     app.use(delay_1.default);
 }
+// Start Socket Configuration
+(0, init_1.default)(io);
 // Automatically allows user routers
 app.use(user_1.default);
 // Automatically allows normal routes
 app.use(normal_1.default);
-// Automatically allows task routes
-app.use(task_1.default);
+// Automatically allows conversation routes
+app.use(conversation_1.default);
 // Automatically allows 404 routes
 app.use(_404_1.default);
 // Listening Server

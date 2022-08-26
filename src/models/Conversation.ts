@@ -99,10 +99,10 @@ const conversationSchema = new mongoose.Schema({
 
     trim: true,
 
-  }, 
+  },
 
   roomKey: {
-    
+
     type: String,
 
     required: true,
