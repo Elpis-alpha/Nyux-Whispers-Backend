@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const init = (io) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('cat');
     io.on('connection', (socket) => {
         console.log('a user has entered the website');
         socket.on('disconnect', () => {

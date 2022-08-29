@@ -5,6 +5,8 @@ import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
 const init = async (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>) => {
 
+  console.log('cat');  
+
   io.on('connection', (socket) => {
 
     console.log('a user has entered the website');

@@ -1,3 +1,6 @@
+import https from 'https';
+
+
 // Import Statements
 import './middleware/init';
 
@@ -30,16 +33,8 @@ import normalRouter from './routers/normal';
 import conversationRouter from './routers/conversation';
 
 
-// Acquire an instance of Express
-const app: Express = express();
-
-
-// Create an instance of a http server 
-const server: http.Server = http.createServer(app)
-
-
-// Create the io server instance
-const io = new Server(server)
+// Acquires the port on which the application runs
+const frontEndLocation = process.env.FRONT_END_LOCATION
 
 
 // Acquires the port on which the application runs
@@ -48,6 +43,32 @@ const port = process.env.PORT
 
 // Reterieves the application production status
 const isProduction = process.env.IS_PRODUCTION === 'true'
+
+
+// Reterieves the application http prefered information
+const useHttps = process.env.USE_HTTPS === 'true'
+
+
+// Acquire an instance of Express
+const app: Express = express();
+
+
+// Create an instance of a http server 
+const server = (useHttps ? https : http).createServer(app)
+
+
+// Create the io server instance
+const io = new Server(server, {
+
+  cors: {
+
+    origin: frontEndLocation,
+
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
+
+  }
+
+})
 
 
 // Obtain the public path
@@ -115,7 +136,7 @@ app.use(_404Router)
 
 
 // Listening Server
-app.listen(port, () => {
+server.listen(port, () => {
 
   console.log(chalk.hex('#009e00')(`Server started successfully on port ${port}`));
 

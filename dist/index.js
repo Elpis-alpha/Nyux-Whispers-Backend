@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const https_1 = __importDefault(require("https"));
 // Import Statements
 require("./middleware/init");
 require("./db/mongoose");
@@ -19,16 +20,25 @@ const user_1 = __importDefault(require("./routers/user"));
 const _404_1 = __importDefault(require("./routers/404"));
 const normal_1 = __importDefault(require("./routers/normal"));
 const conversation_1 = __importDefault(require("./routers/conversation"));
-// Acquire an instance of Express
-const app = (0, express_1.default)();
-// Create an instance of a http server 
-const server = http_1.default.createServer(app);
-// Create the io server instance
-const io = new socket_io_1.Server(server);
+// Acquires the port on which the application runs
+const frontEndLocation = process.env.FRONT_END_LOCATION;
 // Acquires the port on which the application runs
 const port = process.env.PORT;
 // Reterieves the application production status
 const isProduction = process.env.IS_PRODUCTION === 'true';
+// Reterieves the application http prefered information
+const useHttps = process.env.USE_HTTPS === 'true';
+// Acquire an instance of Express
+const app = (0, express_1.default)();
+// Create an instance of a http server 
+const server = (useHttps ? https_1.default : http_1.default).createServer(app);
+// Create the io server instance
+const io = new socket_io_1.Server(server, {
+    cors: {
+        origin: frontEndLocation,
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE'
+    }
+});
 // Obtain the public path
 const publicPath = path_1.default.join(__dirname, '../public');
 // Obtain the views path
@@ -64,7 +74,7 @@ app.use(conversation_1.default);
 // Automatically allows 404 routes
 app.use(_404_1.default);
 // Listening Server
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(chalk_1.default.hex('#009e00')(`Server started successfully on port ${port}`));
     console.log(chalk_1.default.cyanBright(`Server time: ${new Date().toLocaleString()}`));
 });
