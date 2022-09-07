@@ -55,15 +55,6 @@ const userSchema = new mongoose_1.default.Schema({
         // When websocket begins, lastOnline = "online"
         // When websocket ends, lastOnline = "date string"
     },
-    theme: {
-        type: String,
-        required: true,
-        trim: true,
-        enum: {
-            values: ["Light", "Dark", "Auto"],
-            message: `{VALUE} is not supported`
-        },
-    },
     fontSize: {
         type: String,
         required: true,
@@ -190,7 +181,6 @@ userSchema.methods.toPublicJSON = function () {
     delete returnUser.password;
     delete returnUser.tokens;
     delete returnUser.avatar;
-    delete returnUser.theme;
     delete returnUser.fontSize;
     delete returnUser.sendWithEnter;
     return returnUser;

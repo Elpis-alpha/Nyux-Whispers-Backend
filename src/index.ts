@@ -58,7 +58,7 @@ const server = (useHttps ? https : http).createServer(app)
 
 
 // Create the io server instance
-const io = new Server(server, {
+const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
 
   cors: {
 

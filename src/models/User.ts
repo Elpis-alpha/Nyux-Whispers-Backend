@@ -85,24 +85,6 @@ const userSchema = new mongoose.Schema({
 
   },
 
-  theme: {
-
-    type: String,
-
-    required: true,
-
-    trim: true,
-
-    enum: {
-
-      values: ["Light", "Dark", "Auto"],
-
-      message: `{VALUE} is not supported`
-
-    },
-
-  },
-
   fontSize: {
 
     type: String,
@@ -330,8 +312,6 @@ userSchema.methods.toPublicJSON = function (): JSON {
 
   delete returnUser.avatar
 
-  delete returnUser.theme
-
   delete returnUser.fontSize
 
   delete returnUser.sendWithEnter
@@ -420,7 +400,7 @@ userSchema.pre('save', async function (next) {
 
 
 // Create User Model
-const User = mongoose.model('User', userSchema)
+const User = mongoose.model<MyUser>('User', userSchema)
 
 
 export default User

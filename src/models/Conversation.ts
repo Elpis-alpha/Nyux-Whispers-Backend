@@ -111,6 +111,18 @@ const conversationSchema = new mongoose.Schema({
 
     default: v4()
 
+  },
+
+  pinned: {
+    
+    type: Number,
+
+    required: true,
+
+    default: 0,
+
+    min: 0 // set value to "new Date().getTime()" to pin and 0 to unpin
+
   }
 
 }, { timestamps: true })
@@ -419,6 +431,6 @@ conversationSchema.methods.deleteMessage = async function (messageID: string) {
 
 
 // Conversation Model
-const Conversation = mongoose.model('Conversation', conversationSchema)
+const Conversation = mongoose.model<MyConversation>('Conversation', conversationSchema)
 
 export default Conversation

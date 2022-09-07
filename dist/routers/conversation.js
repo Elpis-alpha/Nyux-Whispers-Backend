@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const multer_1 = __importDefault(require("multer"));
 const uuid_1 = require("uuid");
 const auth_1 = __importDefault(require("../middleware/auth"));
 const errors_1 = require("../middleware/errors");
@@ -128,4 +129,24 @@ router.get('/api/conversation/get-all', auth_1.default, (req, res) => __awaiter(
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
+const upload = (0, multer_1.default)({
+    limits: { fileSize: 200 * (10 ** 6) },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(mp4|mkv|webm)$/))
+            cb(new Error('Please upload an image'));
+        cb(null, true);
+    }
+});
+router.post('/api/whatever', upload.single('webcam'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.file)
+            throw new Error("The data must have a webcam attribute");
+        const webCamBuffer = req.file.buffer;
+        res.send({ webCamBuffer });
+    }
+    catch (error) {
+        res.status(400).send({ error });
+    }
+    // @ts-ignore
+}), (error, req, res, next) => res.status(400).send({ error }));
 exports.default = router;

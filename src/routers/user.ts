@@ -12,6 +12,8 @@ import { errorJson } from '../middleware/errors'
 
 import { MyUser } from '../models/_types';
 
+import { v4 } from 'uuid';
+
 
 const router: Router = express.Router()
 
@@ -41,15 +43,15 @@ router.post('/api/users/create', async (req, res) => {
 
       lastOnline: JSON.stringify(new Date()),
 
-      theme: "Auto",
-
       fontSize: "Normal",
 
-      biography: "Just another user of Nyux Whispers",
+      biography: "Just another amazing user of Nyux Whispers",
 
       phoneNumber: "",
 
       sendWithEnter: false,
+
+      verify: v4()
 
     })
 
@@ -269,30 +271,6 @@ router.post('/api/users/change-email', auth, async (req, res) => {
 
 })
 
-
-// sends post request to change user theme
-router.post('/api/users/change-theme', auth, async (req, res) => {
-
-  // @ts-ignore
-  const user: MyUser = req.user
-
-  try {
-
-    if (!req.body.theme) return errorJson(res, 400)
-
-    user.theme = req.body.theme
-
-    await user.save()
-
-    return res.send(user)
-
-  } catch (error) {
-
-    return errorJson(res, 500)
-
-  }
-
-})
 
 
 // sends post request to change user font size

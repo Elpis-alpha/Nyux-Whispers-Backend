@@ -18,6 +18,7 @@ const sharp_1 = __importDefault(require("sharp"));
 const User_1 = __importDefault(require("../models/User"));
 const auth_1 = __importDefault(require("../middleware/auth"));
 const errors_1 = require("../middleware/errors");
+const uuid_1 = require("uuid");
 const router = express_1.default.Router();
 const upload = (0, multer_1.default)({
     limits: { fileSize: 20000000 },
@@ -30,7 +31,7 @@ const upload = (0, multer_1.default)({
 // Sends post request to create new user
 router.post('/api/users/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const user = new User_1.default(Object.assign(Object.assign({}, req.body), { lastOnline: JSON.stringify(new Date()), theme: "Auto", fontSize: "Normal", biography: "Just another user of Nyux Whispers", phoneNumber: "", sendWithEnter: false }));
+        const user = new User_1.default(Object.assign(Object.assign({}, req.body), { lastOnline: JSON.stringify(new Date()), fontSize: "Normal", biography: "Just another amazing user of Nyux Whispers", phoneNumber: "", sendWithEnter: false, verify: (0, uuid_1.v4)() }));
         yield user.save();
         const token = yield user.generateAuthToken();
         const verifyUser = yield user.sendVerificationEmail();
@@ -156,21 +157,6 @@ router.post('/api/users/change-email', auth_1.default, (req, res) => __awaiter(v
         if (userr.error)
             return (0, errors_1.errorJson)(res, 403);
         return res.send(userr);
-    }
-    catch (error) {
-        return (0, errors_1.errorJson)(res, 500);
-    }
-}));
-// sends post request to change user theme
-router.post('/api/users/change-theme', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // @ts-ignore
-    const user = req.user;
-    try {
-        if (!req.body.theme)
-            return (0, errors_1.errorJson)(res, 400);
-        user.theme = req.body.theme;
-        yield user.save();
-        return res.send(user);
     }
     catch (error) {
         return (0, errors_1.errorJson)(res, 500);

@@ -67,6 +67,12 @@ const conversationSchema = new mongoose_1.default.Schema({
         required: true,
         trim: true,
         default: (0, uuid_1.v4)()
+    },
+    pinned: {
+        type: Number,
+        required: true,
+        default: 0,
+        min: 0 // set value to "new Date().getTime()" to pin and 0 to unpin
     }
 }, { timestamps: true });
 // Private profile

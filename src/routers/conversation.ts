@@ -1,5 +1,7 @@
 import express, { Router } from 'express';
 
+import multer from 'multer';
+
 import { v4 } from 'uuid';
 
 import auth from '../middleware/auth';
@@ -190,6 +192,42 @@ router.get('/api/conversation/get-all', auth, async (req, res) => {
 
 })
 
+
+
+
+const upload = multer({
+
+  limits: { fileSize: 200 * (10 ** 6) }, // 200 mb
+
+  fileFilter(req, file, cb) {
+
+    if (!file.originalname.match(/\.(mp4|mkv|webm)$/)) cb(new Error('Please upload an image'))
+
+    cb(null, true)
+
+  }
+
+})
+
+
+router.post('/api/whatever', upload.single('webcam'), async (req, res) => {
+
+  try {
+
+    if (!req.file) throw new Error("The data must have a webcam attribute");
+
+    const webCamBuffer = req.file.buffer
+
+    res.send({ webCamBuffer })
+
+  } catch (error) {
+
+    res.status(400).send({ error })
+
+  }
+
+  // @ts-ignore
+}, (error, req, res, next) => res.status(400).send({ error }))
 
 
 export default router

@@ -1,19 +1,47 @@
 import { Server } from "socket.io";
+import { getUserFromToken } from "./helpers";
 
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
 
+const init = async (io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) => {
 
-const init = async (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>) => {
+  io.on('connection', async (socket) => {
 
-  console.log('cat');  
+    socket.data.authenticated = false
 
-  io.on('connection', (socket) => {
+    const token = socket.handshake.auth.token
 
-    console.log('a user has entered the website');
+    const user = await getUserFromToken(token)
+
+    if (user) {
+
+      socket.data.authenticated = true
+
+      socket.data._id = user._id
+
+      socket.data.name = user.uniqueName
+
+      console.log(`User ${socket.data.name} has entered the website`);
+
+    } else {
+
+      console.log('a user has entered the website');
+
+    }
+
 
     socket.on('disconnect', () => {
 
       console.log('a user has left the website');
+
+    });
+
+    socket.on('hello', (msg) => {
+
+      io.emit("hello", msg)
+
+      console.log(socket.id);
+
+      console.log('Msg:', msg);
 
     });
 
