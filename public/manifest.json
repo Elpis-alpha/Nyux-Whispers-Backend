@@ -1,11 +1,27 @@
 {
-  "short_name": "New Project Backend",
-  "name": "New Project Backend",
+  "short_name": "Nyux Whispers",
+  "name": "Nyux Whisper",
+  "description": "Nyux Whispers presents you a fabulous experience on our chatting application where you can communicate with users around the world",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
+      "src": "favicon-16.ico",
+      "sizes": "16x16",
       "type": "image/x-icon"
+    },
+    {
+      "src": "favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo128.png",
+      "type": "image/png",
+      "sizes": "128x128"
+    },
+    {
+      "src": "logo180.png",
+      "type": "image/png",
+      "sizes": "180x180"
     },
     {
       "src": "logo192.png",
@@ -20,6 +36,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#f4f4f4",
-  "background_color": "#f4f4f4"
+  "orientation": "portrait",
+  "theme_color": "#ededed",
+  "background_color": "#ededed"
 }

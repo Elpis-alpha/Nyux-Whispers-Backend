@@ -20,13 +20,13 @@
 
 <meta name='googlebot' content='all' />
 
-<meta name='application-name' content='Some Application' />
+<meta name='application-name' content="{{ title }}" />
 
 <meta name="theme-color" content="#f4f4f4" />
 
 <meta name="keywords" content="backend,app,app" />
 
-<meta name="description" content={{ description }} />
+<meta name="description" content="{{ description }}" />
 
 <link rel="icon" href="/favicon.ico" />
 
@@ -34,11 +34,11 @@
 
 <link rel="manifest" href="/manifest.json" />
 
-<meta property="og:title" content={{ title }} />
+<meta property="og:title" content="{{ title }}" />
 
-<meta property="og:url" content={{ host }} />
+<meta property="og:url" content="{{ host }}" />
 
-<meta property="og:description" content={{ description }} />
+<meta property="og:description" content="{{ description }}" />
 
 <meta property="og:type" content="website" />
 
@@ -53,3 +53,11 @@
 <meta property="og:image:type" content="image/png" />
 
 <link rel="image_src" href="{{ host }}/images/og-image.png" />
+
+<meta name="twitter:site" content="@elpis_alpha" />
+
+<meta name="twitter:creator" content="@elpis_alpha" />
+
+<meta property="twitter:image" content="{{ host }}/images/og-image.png" />
+
+<meta name="twitter:description" content="{{ description }}" />
