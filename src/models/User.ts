@@ -45,6 +45,16 @@ const userSchema = new mongoose.Schema({
 
     unique: true,
 
+    validate(value: string) {
+
+      if (/[^a-z\-\_0-9]/g.test(value)) {
+
+        throw new Error('Unique Name is invalid')
+
+      }
+
+    }
+
   },
 
   email: {
@@ -192,7 +202,7 @@ userSchema.methods.changeUniqueName = async function (name: string) {
 
   try {
 
-    user.uniqueName = name
+    user.uniqueName = name.trim().replace(/[^a-zA-Z\ \-\_0-9]/g, '').replace(/ /g, '-').toLowerCase()
 
     await user.save()
 
@@ -214,6 +224,8 @@ userSchema.methods.changeEmail = async function (email: string) {
   const user: MyUser = this
 
   try {
+
+    if (!validator.isEmail(email)) return { error: 'Not an Email' }
 
     user.email = email
 
@@ -372,9 +384,15 @@ userSchema.methods.sendExitEmail = async function (): Promise<Object> {
 
 
 // For login
-userSchema.statics.findbyCredentials = async (email, password) => {
+userSchema.statics.findbyCredentials = async ({ email, uniqueName }, password) => {
 
-  const user = await User.findOne({ email }, { avatar: 0, avatarSmall: 0 })
+  let query;
+
+  if (email) query = { email }
+
+  else query = { uniqueName }
+
+  const user = await User.findOne(query, { avatar: 0 })
 
   if (!user) throw new Error('Unable to login')
 

@@ -10,8 +10,6 @@ export interface MyUser {
 
   lastOnline: string
 
-  theme: "Light" | "Dark" | "Auto"
-
   fontSize: "Small" | "Normal" | "Large"
 
   biography: string

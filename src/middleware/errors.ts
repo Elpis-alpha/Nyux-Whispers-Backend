@@ -9,7 +9,10 @@ const siteName = process.env.SITE_NAME
 const host = process.env.HOST
 
 
-export const errorJson = (res: Response, code = 404, message?: string) => {
+type errorCodeType = 400 | 401 | 402 | 403 | 404 | 405 | 408 | 500 | 501 | 502 | 503 | 504
+
+
+export const errorJson = (res: Response, code: errorCodeType = 404, message?: string) => {
 
   let error = ""
 
@@ -49,7 +52,7 @@ export const errorJson = (res: Response, code = 404, message?: string) => {
 
 }
 
-export const errorHtml = (res: Response, code = 404) => {
+export const errorHtml = (res: Response, code: errorCodeType = 404) => {
 
   let error = ""
 

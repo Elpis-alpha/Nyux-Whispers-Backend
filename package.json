@@ -5,10 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node dist/index.js",
-    "dev-j": "env-cmd -f./config/dev.env nodemon dist/index.js -e js,hbs,json,env,css",
-    "dev-t": "npx tsc",
-    "dev-w": "npx tsc --watch",
-    "db": "cd C:\\Program Files\\MongoDB\\package\\bin && mongod.exe --dbpath=\"C:\\Program Files\\MongoDB\\database\""
+    "dev": "env-cmd -f./config/dev.env nodemon dist/index.js -e js,hbs,json,env,css",
+    "dev:compile": "npx tsc",
+    "dev:watch": "npx tsc --watch"
   },
   "author": "Elpis",
   "license": "ISC",

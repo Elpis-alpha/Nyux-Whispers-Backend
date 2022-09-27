@@ -50,14 +50,15 @@ router.get('/api/users/verify', auth_1.default, (req, res) => __awaiter(void 0, 
 }));
 // Sends post request to log user in
 router.post('/api/users/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userData = req.body;
+    const { email, uniqueName, password } = req.body;
     try {
         // @ts-ignore
-        const user = yield User_1.default.findbyCredentials(userData.email, userData.password);
+        const user = yield User_1.default.findbyCredentials({ email, uniqueName }, password);
         const token = yield user.generateAuthToken();
         res.status(200).send({ user, token });
     }
     catch (error) {
+        console.log(error);
         return (0, errors_1.errorJson)(res, 400);
     }
 }));
@@ -90,22 +91,28 @@ router.get('/api/users/user', auth_1.default, (req, res) => __awaiter(void 0, vo
 }));
 // sends get request to find a user
 router.get('/api/users/find', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const _id = req.query.id;
+    const _id = req.query._id;
     const email = req.query.email;
+    const uniqueName = req.query.uniqueName;
     try {
         let user;
         if (typeof _id === "string") {
             user = yield User_1.default.findById(_id);
             if (!user)
-                return (0, errors_1.errorJson)(res, 404);
+                return (0, errors_1.errorJson)(res, 404, "User does not exist");
         }
         else if (typeof email === "string") {
             user = yield User_1.default.findOne({ email });
             if (!user)
-                return (0, errors_1.errorJson)(res, 404);
+                return (0, errors_1.errorJson)(res, 404, "User does not exist");
+        }
+        else if (typeof uniqueName === "string") {
+            user = yield User_1.default.findOne({ uniqueName });
+            if (!user)
+                return (0, errors_1.errorJson)(res, 404, "User does not exist");
         }
         else {
-            return (0, errors_1.errorJson)(res, 400);
+            return (0, errors_1.errorJson)(res, 400, "Include any of the following as query params: '_id', 'email' or 'uniqueName'");
         }
         res.send(user.toPublicJSON());
     }
@@ -113,13 +120,13 @@ router.get('/api/users/find', (req, res) => __awaiter(void 0, void 0, void 0, fu
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user name
-router.post('/api/users/change-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user name
+router.patch('/api/users/change-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
         if (!req.body.name)
-            return (0, errors_1.errorJson)(res, 400);
+            return (0, errors_1.errorJson)(res, 400, "Include 'name' in the req.body for the new name");
         user.name = req.body.name;
         yield user.save();
         return res.send(user);
@@ -128,47 +135,49 @@ router.post('/api/users/change-name', auth_1.default, (req, res) => __awaiter(vo
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user uniqueName
-router.post('/api/users/change-unique-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user uniqueName
+router.patch('/api/users/change-unique-name', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
-        if (!req.body.name)
-            return (0, errors_1.errorJson)(res, 400);
-        const userr = yield user.changeUniqueName(req.body.name);
+        if (!req.body.uniqueName)
+            return (0, errors_1.errorJson)(res, 400, "Include 'uniqueName' in the req.body for the new unique name");
+        const userr = yield user.changeUniqueName(req.body.uniqueName);
         // @ts-ignore
         if (userr.error)
-            return (0, errors_1.errorJson)(res, 403);
+            return (0, errors_1.errorJson)(res, 403, userr.error);
         return res.send(userr);
     }
     catch (error) {
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user email
-router.post('/api/users/change-email', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user email
+router.patch('/api/users/change-email', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
         if (!req.body.email)
-            return (0, errors_1.errorJson)(res, 400);
+            return (0, errors_1.errorJson)(res, 400, "Include 'email' in the req.body for the new email");
         const userr = yield user.changeEmail(req.body.email);
         // @ts-ignore
         if (userr.error)
-            return (0, errors_1.errorJson)(res, 403);
+            return (0, errors_1.errorJson)(res, 403, userr.error);
         return res.send(userr);
     }
     catch (error) {
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user font size
-router.post('/api/users/change-font-size', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user font size
+router.patch('/api/users/change-font-size', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
         if (!req.body.fontSize)
-            return (0, errors_1.errorJson)(res, 400);
+            return (0, errors_1.errorJson)(res, 400, "Include 'fontSize' in the req.body for the new font size");
+        if (!["Small", "Normal", "Large"].includes(req.body.fontSize))
+            return (0, errors_1.errorJson)(res, 400, "Specified font size is invalid, use: 'Small', 'Normal' or 'Large'");
         user.fontSize = req.body.fontSize;
         yield user.save();
         return res.send(user);
@@ -177,13 +186,13 @@ router.post('/api/users/change-font-size', auth_1.default, (req, res) => __await
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user biography
-router.post('/api/users/change-biography', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user biography
+router.patch('/api/users/change-biography', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
-        if (!req.body.biography)
-            return (0, errors_1.errorJson)(res, 400);
+        if (typeof req.body.biography !== "string")
+            return (0, errors_1.errorJson)(res, 400, "Include 'biography' in the req.body for the new biography");
         user.biography = req.body.biography;
         yield user.save();
         return res.send(user);
@@ -192,13 +201,13 @@ router.post('/api/users/change-biography', auth_1.default, (req, res) => __await
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user phone number
-router.post('/api/users/change-phone-number', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user phone number
+router.patch('/api/users/change-phone-number', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
-        if (!req.body.phoneNumber)
-            return (0, errors_1.errorJson)(res, 400);
+        if (typeof req.body.phoneNumber !== "string")
+            return (0, errors_1.errorJson)(res, 400, "Include 'phoneNumber' in the req.body for the new phone number");
         user.phoneNumber = req.body.phoneNumber;
         yield user.save();
         return res.send(user);
@@ -207,13 +216,13 @@ router.post('/api/users/change-phone-number', auth_1.default, (req, res) => __aw
         return (0, errors_1.errorJson)(res, 500);
     }
 }));
-// sends post request to change user send with enter
-router.post('/api/users/change-send-with-enter', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// sends patch request to change user send with enter
+router.patch('/api/users/change-send-with-enter', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const user = req.user;
     try {
-        if (!req.body.sendWithEnter)
-            return (0, errors_1.errorJson)(res, 400);
+        if (typeof req.body.sendWithEnter !== "boolean")
+            return (0, errors_1.errorJson)(res, 400, "Include 'sendWithEnter' in the req.body (as a boolean) for the new send with enter");
         user.sendWithEnter = req.body.sendWithEnter;
         yield user.save();
         return res.send(user);
@@ -223,12 +232,12 @@ router.post('/api/users/change-send-with-enter', auth_1.default, (req, res) => _
     }
 }));
 // Sends patch request to change password
-router.post('/api/users/change-password', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.patch('/api/users/change-password', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // @ts-ignore
         const user = req.user;
         // @ts-ignore
-        const _user = yield User_1.default.findbyCredentials(user.email, req.body.oldPassword);
+        yield User_1.default.findbyCredentials({ email: user.email }, req.body.oldPassword);
         user.password = req.body.newPassword;
         yield user.save();
         res.status(201).send(user);
@@ -287,12 +296,17 @@ router.delete('/api/users/avatar/remove', auth_1.default, (req, res) => __awaite
 }));
 // Sends get request to render profile avatar
 router.get('/api/users/avatar/view', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const _id = req.query._id;
     try {
+        if (typeof _id !== "string")
+            return (0, errors_1.errorJson)(res, 400, "Include '_id' as a query parameter");
         // @ts-ignore
         const user = yield User_1.default.findById(_id);
-        if (!user || !user.avatar)
-            throw new Error("No User or Avatar");
+        if (!user)
+            return (0, errors_1.errorJson)(res, 400, "Invalid '_id'");
+        if (!((_a = user.avatar) === null || _a === void 0 ? void 0 : _a.normal))
+            return (0, errors_1.errorJson)(res, 400, "User does not have an avatar");
         res.set('Content-Type', 'image/png');
         if (req.query.size === "small") {
             res.send(user.avatar.small);
@@ -313,19 +327,32 @@ router.get('/api/users/exists', (req, res) => __awaiter(void 0, void 0, void 0, 
         if (typeof email === "string") {
             const user = yield User_1.default.findOne({ email });
             if (user === null) {
-                return res.status(200).send({ message: 'user does not exist' });
+                return res.status(200).send({ message: 'User does not exist' });
             }
         }
         else if (typeof uniqueName === "string") {
             const user = yield User_1.default.findOne({ uniqueName });
             if (user === null) {
-                return res.status(200).send({ message: 'user does not exist' });
+                return res.status(200).send({ message: 'User does not exist' });
             }
         }
         res.send({ message: 'user exists' });
     }
     catch (error) {
-        res.status(200).send({ message: 'user does not exist' });
+        res.status(200).send({ message: 'User does not exist' });
+    }
+}));
+// sends get request to get available unique names
+router.get('/api/users/look-for-available-unique-names', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const sample = req.query.sample;
+    try {
+        if (typeof sample !== "string")
+            return (0, errors_1.errorJson)(res, 400, "Include a request query called 'sample' in the request");
+        const sampleList = sample.split(" ").slice(0, 2);
+        res.send({ message: 'user exists' });
+    }
+    catch (error) {
+        res.status(200).send({ message: 'User does not exist' });
     }
 }));
 exports.default = router;

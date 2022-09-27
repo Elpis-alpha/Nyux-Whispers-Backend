@@ -35,6 +35,11 @@ const userSchema = new mongoose_1.default.Schema({
         trim: true,
         lowercase: true,
         unique: true,
+        validate(value) {
+            if (/[^a-z\-\_0-9]/g.test(value)) {
+                throw new Error('Unique Name is invalid');
+            }
+        }
     },
     email: {
         type: String,
@@ -109,7 +114,7 @@ userSchema.methods.changeUniqueName = function (name) {
         // @ts-ignore
         const user = this;
         try {
-            user.uniqueName = name;
+            user.uniqueName = name.trim().replace(/[^a-zA-Z\ \-\_0-9]/g, '').replace(/ /g, '-').toLowerCase();
             yield user.save();
             return user;
         }
@@ -124,6 +129,8 @@ userSchema.methods.changeEmail = function (email) {
         // @ts-ignore
         const user = this;
         try {
+            if (!validator_1.default.isEmail(email))
+                return { error: 'Not an Email' };
             user.email = email;
             yield user.save();
             return user;
@@ -220,8 +227,13 @@ userSchema.methods.sendExitEmail = function () {
     });
 };
 // For login
-userSchema.statics.findbyCredentials = (email, password) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User.findOne({ email }, { avatar: 0, avatarSmall: 0 });
+userSchema.statics.findbyCredentials = ({ email, uniqueName }, password) => __awaiter(void 0, void 0, void 0, function* () {
+    let query;
+    if (email)
+        query = { email };
+    else
+        query = { uniqueName };
+    const user = yield User.findOne(query, { avatar: 0 });
     if (!user)
         throw new Error('Unable to login');
     const isMatch = yield bcryptjs_1.default.compare(password, user.password);

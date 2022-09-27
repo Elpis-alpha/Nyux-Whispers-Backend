@@ -35,6 +35,3 @@ const setDatabase = async (connectionString: string) => {
 }
 
 setDatabase(connectionString)
-
-
-
