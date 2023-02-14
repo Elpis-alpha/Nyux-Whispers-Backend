@@ -36,7 +36,7 @@ const upload = multer({
 
 
 // Sends post request to create test user
-router.post('/api/test-user/create', async (req, res) => {
+router.post('/api/pre-user/create', async (req, res) => {
 
   try {
 
@@ -62,7 +62,7 @@ router.post('/api/test-user/create', async (req, res) => {
 
 
 // Sends post request to get test user
-router.get('/api/test-user/retreive', async (req, res) => {
+router.get('/api/pre-user/retreive', async (req, res) => {
 
   try {
 
@@ -83,7 +83,7 @@ router.get('/api/test-user/retreive', async (req, res) => {
 
 
 // Sends post request to test the test user verification status
-router.post('/api/test-user/test', async (req, res) => {
+router.post('/api/pre-user/test', async (req, res) => {
 
   try {
 

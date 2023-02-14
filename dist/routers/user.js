@@ -31,7 +31,7 @@ const upload = (0, multer_1.default)({
     }
 });
 // Sends post request to create test user
-router.post('/api/test-user/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/api/pre-user/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // @ts-ignore
         let preUser = yield PreUser_1.default.findOne({ email: req.body.email });
@@ -47,7 +47,7 @@ router.post('/api/test-user/create', (req, res) => __awaiter(void 0, void 0, voi
     }
 }));
 // Sends post request to get test user
-router.get('/api/test-user/retreive', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/api/pre-user/retreive', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // @ts-ignore
         const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
@@ -60,7 +60,7 @@ router.get('/api/test-user/retreive', (req, res) => __awaiter(void 0, void 0, vo
     }
 }));
 // Sends post request to test the test user verification status
-router.post('/api/test-user/test', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/api/pre-user/test', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // @ts-ignore
         const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
