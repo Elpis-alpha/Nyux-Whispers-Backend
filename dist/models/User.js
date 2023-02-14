@@ -196,7 +196,7 @@ userSchema.methods.toPublicJSON = function () {
 userSchema.methods.sendVerificationEmail = function () {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
-        const mailBody = (0, mailTypes_1.welcomeMail)(siteName, `${host}/mail/welcome-mail/${user._id}/${user.verify}`);
+        const mailBody = (0, mailTypes_1.welcomeMail)(siteName, `${host}/complain`);
         try {
             const mail = yield (0, sendMail_1.default)(user.email, `Welcome to ${siteName}`, mailBody);
             // @ts-ignore

@@ -19,6 +19,8 @@ const User_1 = __importDefault(require("../models/User"));
 const auth_1 = __importDefault(require("../middleware/auth"));
 const errors_1 = require("../middleware/errors");
 const uuid_1 = require("uuid");
+const SpecialCtrl_1 = require("../helpers/SpecialCtrl");
+const PreUser_1 = __importDefault(require("../models/PreUser"));
 const router = express_1.default.Router();
 const upload = (0, multer_1.default)({
     limits: { fileSize: 20000000 },
@@ -28,9 +30,64 @@ const upload = (0, multer_1.default)({
         cb(null, true);
     }
 });
+// Sends post request to create test user
+router.post('/api/test-user/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // @ts-ignore
+        let preUser = yield PreUser_1.default.findOne({ email: req.body.email });
+        if (!preUser) {
+            preUser = new PreUser_1.default({ email: req.body.email });
+            yield preUser.save();
+        }
+        const mailInfo = yield preUser.sendVerificationEmail();
+        res.status(201).send({ email: preUser.email, mailInfo });
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 400);
+    }
+}));
+// Sends post request to get test user
+router.get('/api/test-user/retreive', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // @ts-ignore
+        const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
+        if (!preUser)
+            return (0, errors_1.errorJson)(res, 404, "not a pre-user");
+        res.status(201).send({ email: preUser === null || preUser === void 0 ? void 0 : preUser.email, verified: preUser === null || preUser === void 0 ? void 0 : preUser.verified });
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 400);
+    }
+}));
+// Sends post request to test the test user verification status
+router.post('/api/test-user/test', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // @ts-ignore
+        const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
+        if (!preUser)
+            return (0, errors_1.errorJson)(res, 404, "not a pre-user");
+        if (!preUser.verified) {
+            if (preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode)) {
+                preUser.verified = true;
+                yield preUser.save();
+            }
+        }
+        res.status(201).send({ email: preUser === null || preUser === void 0 ? void 0 : preUser.email, verified: preUser === null || preUser === void 0 ? void 0 : preUser.verified });
+    }
+    catch (error) {
+        return (0, errors_1.errorJson)(res, 400);
+    }
+}));
 // Sends post request to create new user
 router.post('/api/users/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // @ts-ignore
+        const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
+        console.log(preUser);
+        if (!preUser)
+            return (0, errors_1.errorJson)(res, 404, "not a pre-user");
+        if (!preUser.verified || !preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode))
+            return (0, errors_1.errorJson)(res, 404, "not a valid pre-user");
         const user = new User_1.default(Object.assign(Object.assign({}, req.body), { lastOnline: JSON.stringify(new Date()), fontSize: "Normal", biography: "Just another amazing user of Nyux Whispers", phoneNumber: "", sendWithEnter: false, verify: (0, uuid_1.v4)() }));
         yield user.save();
         const token = yield user.generateAuthToken();
@@ -40,13 +97,6 @@ router.post('/api/users/create', (req, res) => __awaiter(void 0, void 0, void 0,
     catch (error) {
         return (0, errors_1.errorJson)(res, 400);
     }
-}));
-// sends get request to send verification mail to auth user
-router.get('/api/users/verify', auth_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // @ts-ignore
-    const user = req.user;
-    const verifyUser = yield user.sendVerificationEmail();
-    return res.send(verifyUser);
 }));
 // Sends post request to log user in
 router.post('/api/users/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -327,13 +377,13 @@ router.get('/api/users/exists', (req, res) => __awaiter(void 0, void 0, void 0, 
         if (typeof email === "string") {
             const user = yield User_1.default.findOne({ email });
             if (user === null) {
-                return res.status(200).send({ message: 'User does not exist' });
+                return res.status(200).send({ message: 'user does not exist' });
             }
         }
         else if (typeof uniqueName === "string") {
             const user = yield User_1.default.findOne({ uniqueName });
             if (user === null) {
-                return res.status(200).send({ message: 'User does not exist' });
+                return res.status(200).send({ message: 'user does not exist' });
             }
         }
         res.send({ message: 'user exists' });
@@ -344,15 +394,55 @@ router.get('/api/users/exists', (req, res) => __awaiter(void 0, void 0, void 0, 
 }));
 // sends get request to get available unique names
 router.get('/api/users/look-for-available-unique-names', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const sample = req.query.sample;
+    let sample = req.query.sample;
     try {
         if (typeof sample !== "string")
             return (0, errors_1.errorJson)(res, 400, "Include a request query called 'sample' in the request");
+        sample = sample.trim().replace(/[^a-zA-Z\ \-\_0-9]/g, '').toLowerCase();
         const sampleList = sample.split(" ").slice(0, 2);
-        res.send({ message: 'user exists' });
+        sample = sampleList.join('-');
+        let listOfNames = [];
+        if (sampleList.length === 1) {
+            listOfNames.push(sample);
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+        }
+        else {
+            listOfNames.push(sample);
+            listOfNames.push(sampleList[0]);
+            listOfNames.push(sampleList[1]);
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(10, 99));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sample + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[0] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+            listOfNames.push(sampleList[1] + (0, SpecialCtrl_1.randomAmong)(99, 9999));
+        }
+        const finalData = yield User_1.default.find({ uniqueName: { $in: listOfNames } }, { uniqueName: 1, _id: 0 });
+        res.send({ sample, sampleList, listOfNames, finalData });
     }
     catch (error) {
-        res.status(200).send({ message: 'User does not exist' });
+        return (0, errors_1.errorJson)(res, 500);
     }
 }));
 exports.default = router;

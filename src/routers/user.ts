@@ -10,9 +10,12 @@ import auth from '../middleware/auth'
 
 import { errorJson } from '../middleware/errors'
 
-import { MyUser } from '../models/_types';
+import { MyPreUser, MyUser } from '../models/_types';
 
 import { v4 } from 'uuid';
+import { randomAmong } from '../helpers/SpecialCtrl';
+import PreUser from '../models/PreUser';
+
 
 
 const router: Router = express.Router()
@@ -32,10 +35,92 @@ const upload = multer({
 })
 
 
+// Sends post request to create test user
+router.post('/api/test-user/create', async (req, res) => {
+
+  try {
+
+    // @ts-ignore
+    let preUser: MyPreUser | undefined = await PreUser.findOne({ email: req.body.email })
+
+    if (!preUser) {
+      preUser = new PreUser({ email: req.body.email })
+      await preUser.save()
+    }
+
+    const mailInfo = await preUser.sendVerificationEmail()
+
+    res.status(201).send({ email: preUser.email, mailInfo })
+
+  } catch (error) {
+
+    return errorJson(res, 400)
+
+  }
+
+})
+
+
+// Sends post request to get test user
+router.get('/api/test-user/retreive', async (req, res) => {
+
+  try {
+
+    // @ts-ignore
+    const preUser: MyPreUser | undefined = await PreUser.findOne({ email: req.body.email })
+
+    if (!preUser) return errorJson(res, 404, "not a pre-user")
+
+    res.status(201).send({ email: preUser?.email, verified: preUser?.verified })
+
+  } catch (error) {
+
+    return errorJson(res, 400)
+
+  }
+
+})
+
+
+// Sends post request to test the test user verification status
+router.post('/api/test-user/test', async (req, res) => {
+
+  try {
+
+    // @ts-ignore
+    const preUser: MyPreUser | undefined = await PreUser.findOne({ email: req.body.email })
+
+    if (!preUser) return errorJson(res, 404, "not a pre-user")
+
+    if (!preUser.verified) {
+      if (preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode)) {
+        preUser.verified = true;
+        await preUser.save()
+      }
+    }
+
+    res.status(201).send({ email: preUser?.email, verified: preUser?.verified })
+
+  } catch (error) {
+
+    return errorJson(res, 400)
+
+  }
+
+})
+
+
 // Sends post request to create new user
 router.post('/api/users/create', async (req, res) => {
 
   try {
+
+    // @ts-ignore
+    const preUser: MyPreUser | undefined = await PreUser.findOne({ email: req.body.email })
+
+    console.log(preUser)
+    if (!preUser) return errorJson(res, 404, "not a pre-user")
+    if (!preUser.verified || !preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode)) return errorJson(res, 404, "not a valid pre-user")
 
     const user: MyUser = new User({
 
@@ -68,19 +153,6 @@ router.post('/api/users/create', async (req, res) => {
     return errorJson(res, 400)
 
   }
-
-})
-
-
-// sends get request to send verification mail to auth user
-router.get('/api/users/verify', auth, async (req, res) => {
-
-  // @ts-ignore
-  const user: MyUser = req.user
-
-  const verifyUser = await user.sendVerificationEmail()
-
-  return res.send(verifyUser)
 
 })
 
@@ -537,13 +609,13 @@ router.get('/api/users/exists', async (req, res) => {
 
       const user = await User.findOne({ email })
 
-      if (user === null) { return res.status(200).send({ message: 'User does not exist' }) }
+      if (user === null) { return res.status(200).send({ message: 'user does not exist' }) }
 
     } else if (typeof uniqueName === "string") {
 
       const user = await User.findOne({ uniqueName })
 
-      if (user === null) { return res.status(200).send({ message: 'User does not exist' }) }
+      if (user === null) { return res.status(200).send({ message: 'user does not exist' }) }
 
     }
 
@@ -561,19 +633,76 @@ router.get('/api/users/exists', async (req, res) => {
 // sends get request to get available unique names
 router.get('/api/users/look-for-available-unique-names', async (req, res) => {
 
-  const sample = req.query.sample
+  let sample = req.query.sample
 
   try {
 
     if (typeof sample !== "string") return errorJson(res, 400, "Include a request query called 'sample' in the request")
 
+    sample = sample.trim().replace(/[^a-zA-Z\ \-\_0-9]/g, '').toLowerCase()
+
     const sampleList = sample.split(" ").slice(0, 2)
 
-    res.send({ message: 'user exists' })
+    sample = sampleList.join('-')
+
+    let listOfNames = []
+
+    if (sampleList.length === 1) {
+
+      listOfNames.push(sample)
+
+      listOfNames.push(sample + randomAmong(10, 99))
+      listOfNames.push(sample + randomAmong(10, 99))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sample + randomAmong(99, 9999))
+
+    } else {
+
+      listOfNames.push(sample)
+      listOfNames.push(sampleList[0])
+      listOfNames.push(sampleList[1])
+
+      listOfNames.push(sample + randomAmong(10, 99))
+      listOfNames.push(sampleList[0] + randomAmong(10, 99))
+      listOfNames.push(sampleList[1] + randomAmong(10, 99))
+
+      listOfNames.push(sample + randomAmong(10, 99))
+      listOfNames.push(sampleList[0] + randomAmong(10, 99))
+      listOfNames.push(sampleList[1] + randomAmong(10, 99))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sampleList[0] + randomAmong(99, 9999))
+      listOfNames.push(sampleList[1] + randomAmong(99, 9999))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sampleList[0] + randomAmong(99, 9999))
+      listOfNames.push(sampleList[1] + randomAmong(99, 9999))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sampleList[0] + randomAmong(99, 9999))
+      listOfNames.push(sampleList[1] + randomAmong(99, 9999))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sampleList[0] + randomAmong(99, 9999))
+      listOfNames.push(sampleList[1] + randomAmong(99, 9999))
+
+      listOfNames.push(sample + randomAmong(99, 9999))
+      listOfNames.push(sampleList[0] + randomAmong(99, 9999))
+      listOfNames.push(sampleList[1] + randomAmong(99, 9999))
+
+    }
+
+    const finalData = await User.find({ uniqueName: { $in: listOfNames } }, { uniqueName: 1, _id: 0 })
+
+    res.send({ sample, sampleList, listOfNames, finalData })
 
   } catch (error) {
 
-    res.status(200).send({ message: 'User does not exist' })
+    return errorJson(res, 500)
 
   }
 

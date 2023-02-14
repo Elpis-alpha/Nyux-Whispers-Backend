@@ -56,6 +56,26 @@ export interface MyUser {
 
 }
 
+export interface MyPreUser {
+
+  _id: string
+
+  email: string
+
+  verified: boolean
+
+  emailCode: { verifyCode: string; }[]
+
+  toJSON: () => Object
+
+  toObject: () => Object
+
+  sendVerificationEmail: () => Promise<Object>
+
+  save: () => Promise<Object>
+
+}
+
 export interface MyConversation {
 
   _id: string
@@ -111,7 +131,6 @@ export interface MyConversation {
   deleteMessage: (messageID: string) => Promise<Object>
 
 }
-
 
 export interface MyMessage {
 

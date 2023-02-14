@@ -338,7 +338,7 @@ userSchema.methods.sendVerificationEmail = async function (): Promise<Object> {
 
   const user = this
 
-  const mailBody = welcomeMail(siteName, `${host}/mail/welcome-mail/${user._id}/${user.verify}`)
+  const mailBody = welcomeMail(siteName, `${host}/complain`)
 
   try {
 
