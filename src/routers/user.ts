@@ -118,7 +118,6 @@ router.post('/api/users/create', async (req, res) => {
     // @ts-ignore
     const preUser: MyPreUser | undefined = await PreUser.findOne({ email: req.body.email })
 
-    console.log(preUser)
     if (!preUser) return errorJson(res, 404, "not a pre-user")
     if (!preUser.verified || !preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode)) return errorJson(res, 404, "not a valid pre-user")
 

@@ -83,7 +83,6 @@ router.post('/api/users/create', (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         // @ts-ignore
         const preUser = yield PreUser_1.default.findOne({ email: req.body.email });
-        console.log(preUser);
         if (!preUser)
             return (0, errors_1.errorJson)(res, 404, "not a pre-user");
         if (!preUser.verified || !preUser.emailCode.map(co => co.verifyCode).includes(req.body.emailCode))
